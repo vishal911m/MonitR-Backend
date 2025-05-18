@@ -127,8 +127,48 @@ export const loginUser = asynchandHandler(async (req, res) => {
 });
 
 //logout user
-
 export const logoutUser = asynchandHandler(async (req, res) => {
   res.clearCookie("token");
   res.status(200).json({message: "User logged out successfully"});
+});
+
+//get user
+export const getUser = asynchandHandler(async (req, res) => {
+  //get the user details from the token --> exclude password
+  const user = await User.findById(req.user._id).select("-password");
+
+  if (user) {
+    res.status(200).json(user);
+  } else {
+    res.status(404).json({message: "User not found"});
+  }
+});
+
+//update user
+export const updateUser = asynchandHandler(async (req, res) => {
+  //get user details from the token --> protect middleware
+  const user = await User.findById(req.user._id).select("-password");
+
+  if(user){
+    //user properties to be updated
+    const { name, email, photo, bio } = req.body;
+    //update user properties
+    user.name = req.body.name || user.name;
+    user.bio = req.body.bio || user.bio;
+    user.photo = req.body.photo || user.photo;
+
+    const updated = await user.save();
+
+    res.status(200).json({
+      _id: updated._id,
+      name: updated.name,
+      email: updated.email,
+      photo: updated.photo,
+      bio: updated.bio,
+      role: updated.role,
+      isVerified: updated.isVerified,
+    });
+  } else {
+    res.status(404).json({message: "User not found"});
+  }
 });
