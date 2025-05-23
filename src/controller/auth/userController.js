@@ -384,3 +384,32 @@ export const verifyEmail = asyncHandler(async (req,res) => {
 
   res.status(200).json({message: "Password reset successfully"});
  });
+
+ export const changePassword = asyncHandler(async (req, res) => {
+  // res.send("Change password route");
+  const { currentPassword, newPassword } = req.body;
+  console.log(changePassword, newPassword);
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({message: "All fields are required"});
+  }
+
+  //find user by id
+  const user = await User.findById(req.user._id);
+
+  //compare the current password with the hashed password in the database
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+  if (!isMatch){
+    return res.status(400).json({message: "Invalid current password "});
+  }
+
+  //reset password
+  if(isMatch){
+    user.password = newPassword;
+    await user.save();
+    res.status(200).json({message: "Password changed successfully"});
+  } else {
+    res.status(400).json({message: "Password could not be changed"});
+  }
+ });
