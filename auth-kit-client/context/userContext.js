@@ -15,7 +15,7 @@ export const UserContextProvider = ({ children }) => {
     email: "",
     password: "",
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   //register user
   const registerUser = async (e) => {
@@ -69,6 +69,7 @@ const loginUser = async (e) => {
   } catch (error) {
     console.log("Error logging in user:", error);
     toast.error(error.response.data.message);
+    setLoading(false);
   }
 };
 
@@ -114,6 +115,53 @@ const logoutUser = async()=>{
   }
 }
 
+//get user details
+const getUser = async() => {
+  setLoading(true);
+  try {
+    const res = await axios.get(`${serverUrl}/api/v1/user`, {
+      withCredentials: true, // to include cookies in the request
+    });
+
+    setUser((prevState) => ({
+      ...prevState,
+      ...res.data,
+    }));
+
+    setLoading(false);
+  } catch (error) {
+    console.log("Error getting user details:", error);
+    setLoading(false);
+    toast.error(error.response.data.message);
+  }
+};
+
+  // update user details
+  const updateUser = async (e, data)=>{
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const res = await axios.patch(`${serverUrl}/api/v1/user`, data, {
+        withCredentials: true, // to include cookies in the request
+      });
+
+      //update the user state
+      setUser((prevState) => ({
+        ...prevState,
+        ...res.data,
+      }));
+
+      toast.success("User updated successfully");
+
+      setLoading(false);
+    } catch (error) {
+      console.log("Error updating user details:", error);
+      setLoading(false);
+      toast.error(error.response.data.message);
+    }
+  }
+
   //dynamic form handler
   const handleUserInput = (name) =>(e) => {
     const value = e.target.value;
@@ -124,11 +172,21 @@ const logoutUser = async()=>{
   };
 
   useEffect(()=>{
-    userLoginStatus()
-  },[])
-
+    // if(userLoginStatus()){
+    //   getUser();
+    // }
+    const loginStatusGetUser = async () =>{
+      const isLoggedIn = await userLoginStatus();
+      console.log("isLoggedIn:", isLoggedIn);
+      if(isLoggedIn){
+        getUser();
+      }
+    };
+    loginStatusGetUser();
+  },[]);
+  console.log("User: ", user);
   return (
-    <UserContext.Provider value={{registerUser, userState, handleUserInput, loginUser, logoutUser}}>
+    <UserContext.Provider value={{registerUser, userState, handleUserInput, loginUser, logoutUser, userLoginStatus, user, updateUser}}>
       {children}
     </UserContext.Provider>
   );
