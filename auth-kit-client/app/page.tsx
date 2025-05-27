@@ -6,7 +6,7 @@ import { useState } from "react";
 
 export default function Home() {
   useRedirect("/login");
-  const  {logoutUser, user, handleUserInput, userState, updateUser} = useUserContext();
+  const  {logoutUser, user, handleUserInput, userState, updateUser, emailVerification} = useUserContext();
   const {name, photo, isVerified, bio} = user;
   const [isOpen, setIsOpen] = useState(false);
 
@@ -28,7 +28,13 @@ export default function Home() {
             alt={name}
             className="w-[40px] h-[40px] rounded-full" 
           />
-          {!isVerified && <button className="px-4 py-2 bg-blue-500 text-white rounded-md">Verify Account</button>}
+          {!isVerified && 
+          <button 
+            onClick={emailVerification}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md"
+          >
+              Verify Account
+          </button>}
           <button 
             onClick={logoutUser}
             className="px-4 py-2 bg-red-600 text-white rounded-md">

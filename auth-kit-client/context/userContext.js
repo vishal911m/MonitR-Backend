@@ -160,6 +160,75 @@ const getUser = async() => {
       setLoading(false);
       toast.error(error.response.data.message);
     }
+  };
+
+  //email verification
+  const emailVerification = async () =>{
+    setLoading(true);
+    try {
+      const res = await axios.post(`${serverUrl}/api/v1/verify-email`, {}, {
+        withCredentials: true, // to include cookies in the request
+      });
+      toast.success("Email verification link sent to your email");
+      setLoading(false);
+    } catch (error) {
+      console.log("Error sending email verification link", error);
+      setLoading(false);
+      toast.error(error.response.data.message);
+    }
+  }
+
+  //verify user/email
+  const verifyUser = async (token) => {
+    setLoading(true);
+
+    try {
+      const res = await axios.post(`${serverUrl}/api/v1/verify-user/${token}`, 
+        {}, 
+        {
+        withCredentials: true, // to include cookies in the request
+        }
+      );
+
+      toast.success("User verified successfully");  
+
+      //refetch user details
+      getUser();
+
+      setLoading(false);
+
+      //redirect to home page
+      router.push("/");
+    } catch (error) {
+      console.log("Error verifying user:", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  };
+
+  //forgot password email
+  const forgotPasswordEmail = async (email) =>{
+    setLoading(true);
+    
+    try {
+      const res = await axios.post(`${serverUrl}/api/v1/forgot-password`, 
+        { email }, 
+        {
+        withCredentials: true, // to include cookies in the request
+        }
+    );
+
+    toast.success("Password reset mail sent successfully");
+
+    setLoading(false);
+    
+    //redirect to login page
+    router.push("/login");
+    } catch (error) {
+    console.log("Error sending forgot password email:", error);
+    toast.error(error.response.data.message);
+    setLoading(false);     
+    }
   }
 
   //dynamic form handler
@@ -186,7 +255,19 @@ const getUser = async() => {
   },[]);
   console.log("User: ", user);
   return (
-    <UserContext.Provider value={{registerUser, userState, handleUserInput, loginUser, logoutUser, userLoginStatus, user, updateUser}}>
+    <UserContext.Provider value={{
+      registerUser, 
+      userState, 
+      handleUserInput, 
+      loginUser, 
+      logoutUser, 
+      userLoginStatus,
+      user, 
+      updateUser, 
+      emailVerification,
+      verifyUser,
+      forgotPasswordEmail,
+    }}>
       {children}
     </UserContext.Provider>
   );
