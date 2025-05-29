@@ -66,11 +66,14 @@ const loginUser = async (e) => {
     setUserState({
       email: "",
       password: "",
-    }); 
+    });
+    
+    //refresh the user details
+    await getUser();
 
     //push user to the dashboard page
     router.push("/");
-    getUser();
+    
   } catch (error) {
     console.log("Error logging in user:", error);
     toast.error(error.response.data.message);
