@@ -3,10 +3,11 @@
 import { useUserContext } from "@/context/userContext";
 import useRedirect from "@/hooks/useUserRedirect";
 import { useState } from "react";
+import ChangePasswordForm from "./Components/auth/ChangePasswordForm/ChangePasswordForm";
 
 export default function Home() {
   useRedirect("/login");
-  const  {logoutUser, user, handleUserInput, userState, updateUser, emailVerification} = useUserContext();
+  const  {logoutUser, user, handleUserInput, userState, updateUser, emailVerification, allUsers, deleteUser} = useUserContext();
   const {name, photo, isVerified, bio} = user;
   const [isOpen, setIsOpen] = useState(false);
 
@@ -76,6 +77,35 @@ export default function Home() {
           </form>
           )}
       </section>
+      <div className="mt-4 flex gap-8">
+        <div className="flex-1">
+          <ChangePasswordForm />
+        </div>
+        <div className="flex-1">
+          <ul>
+            {allUsers.map((user:any )=>(
+              // <li key={user.id} className="border p-1 flex items-center justify-between gap-4">
+              user.role !== "admin" && ( // logic to list the users who are not admin
+              <li key={user.id} className="border p-1 px-2 py-3 grid grid-cols-4 items-center gap-8">
+                <img 
+                  src={user.photo} 
+                  alt={user.name}
+                  className="w-[40px] h-[40px] rounded-full" 
+                />
+                <p>{user.name}</p>
+                <p>{user.bio}</p>
+                <button
+                  className="bg-red-500 text-white p-2"
+                  onClick={()=>deleteUser(user._id)}
+                >
+                  Delete User
+                </button>
+              </li>
+              )
+            ))}
+          </ul>
+        </div>
+      </div>
     </main>
   );
 }

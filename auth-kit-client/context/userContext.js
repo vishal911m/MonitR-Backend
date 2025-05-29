@@ -5,11 +5,15 @@ import toast from "react-hot-toast"
 
 const UserContext = React.createContext();
 
+//set axios to include credentials with every request
+axios.defaults.withCredentials = true;
+
 export const UserContextProvider = ({ children }) => {
 
   const serverUrl = "http://localhost:8000";
   const router = useRouter();
   const [user, setUser] = useState({});
+  const [allUsers, setAllUsers] = useState([]);
   const [userState, setUserState] = useState({
     name: "",
     email: "",
@@ -66,6 +70,7 @@ const loginUser = async (e) => {
 
     //push user to the dashboard page
     router.push("/");
+    getUser();
   } catch (error) {
     console.log("Error logging in user:", error);
     toast.error(error.response.data.message);
@@ -229,6 +234,79 @@ const getUser = async() => {
     toast.error(error.response.data.message);
     setLoading(false);     
     }
+  };
+
+  //reset password
+  const resetPassword = async (token, password) => {
+    setLoading(true);
+
+    try {
+      const res = await axios.post(`${serverUrl}/api/v1/reset-password/${token}`,
+        {
+          password,
+        },
+        {
+          withCredentials: true, // to include cookies in the request
+        }
+      );
+
+      toast.success("Password reset successfully");
+      setLoading(false);
+      //redirect to login page
+      router.push("/login");
+
+
+    } catch (error) {
+      console.log("Error resetting password:", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  }
+
+  //change password
+  const changePassword = async (currentPassword, newPassword) => {
+    // e.preventDefault();
+    setLoading(true);
+
+    try {
+      const res = await axios.patch(`${serverUrl}/api/v1/change-password`, 
+        {currentPassword, newPassword}, 
+        {
+          withCredentials: true, // to include cookies in the request
+        }
+      );
+
+      toast.success("Password changed successfully");
+      setLoading(false);
+      
+      //redirect to login page
+      //router.push("/login");
+    } catch (error) {
+      console.log("Error changing password:", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  };
+
+  //admin routes
+  const getAllUsers = async () => {
+    setLoading(true);
+
+    try {
+      const res = await axios.get(`${serverUrl}/api/v1/admin/users`, 
+        {}, 
+        {
+          withCredentials: true, //send cookies to the server
+      }
+    );
+
+    setAllUsers(res.data);
+    setLoading(false);
+    } catch (error) {
+      console.log("Error getting all the users", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
   }
 
   //dynamic form handler
@@ -239,6 +317,28 @@ const getUser = async() => {
       [name]: value,
     }));
   };
+
+  const deleteUser = async(id) =>{
+    setLoading(true);
+
+    try {
+      const res = await axios.delete(`${serverUrl}/api/v1/admin/users/${id}`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      toast.success("User deleted successfully");
+      setLoading(false);
+      //refresh the users list
+      getAllUsers();
+    } catch (error) {
+      console.log("Error deleting the user", error)
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  }
 
   useEffect(()=>{
     // if(userLoginStatus()){
@@ -251,9 +351,17 @@ const getUser = async() => {
         getUser();
       }
     };
+
     loginStatusGetUser();
   },[]);
+
+  useEffect(()=>{
+    if(user.role === "admin"){
+      getAllUsers();
+    }
+  }, [user.role]);
   console.log("User: ", user);
+
   return (
     <UserContext.Provider value={{
       registerUser, 
@@ -267,6 +375,10 @@ const getUser = async() => {
       emailVerification,
       verifyUser,
       forgotPasswordEmail,
+      resetPassword,
+      changePassword,
+      allUsers,
+      deleteUser
     }}>
       {children}
     </UserContext.Provider>
